@@ -3,6 +3,7 @@ import styled, { css } from 'styled-components';
 import { Stack } from '@suite-components/Skeleton';
 import { Card } from '@trezor/components';
 import { Translation } from '@suite-components';
+import { AccountExceptionLayout } from '@wallet-components';
 import { Section } from '@dashboard-components';
 import { useSelector, useActions } from '@suite-hooks';
 import * as transactionActions from '@wallet-actions/transactionActions';
@@ -128,30 +129,41 @@ const TransactionList = ({ transactions, isLoading, account, ...props }: Props) 
                     <SkeletonTransactionItem />
                 </Stack>
             ) : (
-                Object.keys(transactionsByDate).map(dateKey => {
-                    const isPending = dateKey === 'pending';
-                    return (
-                        <TransactionsGroup
-                            key={dateKey}
-                            dateKey={dateKey}
-                            symbol={props.symbol}
-                            transactions={transactionsByDate[dateKey]}
-                            localCurrency={localCurrency}
-                        >
-                            <StyledCard isPending={isPending}>
-                                {transactionsByDate[dateKey].map((tx: WalletAccountTransaction) => (
-                                    <TransactionItem
-                                        key={tx.txid}
-                                        transaction={tx}
-                                        isPending={isPending}
-                                        accountMetadata={account.metadata}
-                                        accountKey={account.key}
-                                    />
-                                ))}
-                            </StyledCard>
-                        </TransactionsGroup>
-                    );
-                })
+                <>
+                    {transactions.length > 0 && fitleredTransactions.length === 0 ? (
+                        <AccountExceptionLayout
+                            title={<Translation id="TR_NO_SEARCH_RESULTS" />}
+                            image="UNI_WARNING"
+                        />
+                    ) : (
+                        Object.keys(transactionsByDate).map(dateKey => {
+                            const isPending = dateKey === 'pending';
+                            return (
+                                <TransactionsGroup
+                                    key={dateKey}
+                                    dateKey={dateKey}
+                                    symbol={props.symbol}
+                                    transactions={transactionsByDate[dateKey]}
+                                    localCurrency={localCurrency}
+                                >
+                                    <StyledCard isPending={isPending}>
+                                        {transactionsByDate[dateKey].map(
+                                            (tx: WalletAccountTransaction) => (
+                                                <TransactionItem
+                                                    key={tx.txid}
+                                                    transaction={tx}
+                                                    isPending={isPending}
+                                                    accountMetadata={account.metadata}
+                                                    accountKey={account.key}
+                                                />
+                                            ),
+                                        )}
+                                    </StyledCard>
+                                </TransactionsGroup>
+                            );
+                        })
+                    )}
+                </>
             )}
             {showPagination && (
                 <PaginationWrapper>
