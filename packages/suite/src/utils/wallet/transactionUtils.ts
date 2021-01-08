@@ -5,6 +5,7 @@ import { AccountMetadata } from '@suite-types/metadata';
 import { getDateWithTimeZone } from '../suite/date';
 import { toFiatCurrency } from './fiatConverterUtils';
 import { formatAmount, formatNetworkAmount } from './accountUtils';
+import { tr } from 'date-fns/locale';
 
 export const sortByBlockHeight = (a: WalletAccountTransaction, b: WalletAccountTransaction) => {
     // if both are missing the blockHeight don't change their order
@@ -457,7 +458,7 @@ const numberSearchFilter = (
 };
 
 const searchDateRegex = new RegExp(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
-export const searchTransactions = (
+export const simpleSearchTransactions = (
     transactions: WalletAccountTransaction[],
     accountMetadata: AccountMetadata,
     search: string,
@@ -571,4 +572,39 @@ export const searchTransactions = (
     return transactions.filter(
         t => [...new Set(txsToSearch)].includes(t.txid) || t.txid.includes(search),
     );
+};
+
+export const advancedSearchTransactions = (
+    transactions: WalletAccountTransaction[],
+    accountMetadata: AccountMetadata,
+    search: string,
+) => {
+    // No AND/OR operators, just run a simple search
+    if (!search.includes('&') && !search.includes('|')) {
+        return simpleSearchTransactions(transactions, accountMetadata, search);
+    }
+
+    // Split by AND operator first
+    let andSearches = search.split('&').filter(s => s.trim() !== '');
+    if (!andSearches || andSearches.length === 1) {
+        andSearches = [search.replace('&', '')];
+    }
+
+    const allTransactions = andSearches.flatMap(andSearch =>
+        andSearch
+            .split('|')
+            .flatMap(orSearch => simpleSearchTransactions(transactions, accountMetadata, orSearch)),
+    );
+
+    // Final sorting transactions (remove duplicates and non matching AND searches)
+    const transactionCount: { [txid: string]: number } = {};
+    return allTransactions.filter(t => {
+        if (!transactionCount[t.txid]) {
+            transactionCount[t.txid] = 0;
+        }
+
+        transactionCount[t.txid]++;
+
+        return transactionCount[t.txid] === andSearches.length;
+    });
 };
