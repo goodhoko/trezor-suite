@@ -5219,6 +5219,16 @@ const definedMessages = defineMessages({
         id: 'TR_NO_SEARCH_RESULTS',
         defaultMessage: 'No results for your search criterias',
     },
+    TR_TRANSACTIONS_SEARCH_TOOLTIP: {
+        id: 'TR_TRANSACTIONS_SEARCH_TOOLTIP',
+        defaultMessage:
+            'Search by transaction ID, label or amount or use operators such as < > | & = !=.',
+    },
+    TR_TRANSACTIONS_SEARCH_EXAMPLE_1: {
+        id: 'TR_TRANSACTIONS_SEARCH_EXAMPLE_1',
+        defaultMessage:
+            'Try "<strong>> 0.1 & {dateYYYYMMDD}</strong>" to show transactions with amount greater than 0.1 which were completed on {date}',
+    },
 } as const);
 
 export default definedMessages;
