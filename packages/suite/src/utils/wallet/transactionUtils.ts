@@ -5,7 +5,6 @@ import { AccountMetadata } from '@suite-types/metadata';
 import { getDateWithTimeZone } from '../suite/date';
 import { toFiatCurrency } from './fiatConverterUtils';
 import { formatAmount, formatNetworkAmount } from './accountUtils';
-import { tr } from 'date-fns/locale';
 
 export const sortByBlockHeight = (a: WalletAccountTransaction, b: WalletAccountTransaction) => {
     // if both are missing the blockHeight don't change their order
@@ -375,13 +374,28 @@ const groupTransactionIdsByAddress = (transactions: WalletAccountTransaction[]) 
     const addresses: { [address: string]: string[] } = {};
 
     transactions.forEach(t => {
-        t.targets.forEach(target => {
-            target.addresses?.forEach(address => {
+        // Inputs
+        t.details.vin.forEach(vin => {
+            vin.addresses?.forEach(address => {
                 if (!addresses[address]) {
                     addresses[address] = [];
                 }
 
-                addresses[address].push(t.txid);
+                if (addresses[address].indexOf(t.txid) === -1) {
+                    addresses[address].push(t.txid);
+                }
+            });
+        });
+        // Outputs
+        t.details.vout.forEach(vout => {
+            vout.addresses?.forEach(address => {
+                if (!addresses[address]) {
+                    addresses[address] = [];
+                }
+
+                if (addresses[address].indexOf(t.txid) === -1) {
+                    addresses[address].push(t.txid);
+                }
             });
         });
     });
