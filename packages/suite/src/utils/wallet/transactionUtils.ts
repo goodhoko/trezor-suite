@@ -584,27 +584,41 @@ export const advancedSearchTransactions = (
         return simpleSearchTransactions(transactions, accountMetadata, search);
     }
 
-    // Split by AND operator first
-    let andSearches = search.split('&').filter(s => s.trim() !== '');
-    if (!andSearches || andSearches.length === 1) {
-        andSearches = [search.replace('&', '')];
+    // Split by OR operator first
+    let orSplit = search.split('|').filter(s => s.trim() !== '');
+    if (!orSplit || orSplit.length === 1) {
+        orSplit = [search.replace('|', '')];
     }
 
-    const allTransactions = andSearches.flatMap(andSearch =>
-        andSearch
-            .split('|')
-            .flatMap(orSearch => simpleSearchTransactions(transactions, accountMetadata, orSearch)),
-    );
+    // Get all TxIDs matching the searches
+    const filteredTxIDs = new Set([
+        ...orSplit.flatMap(or => {
+            // And searches (only keep results that appear X (split) times)
+            const andSplit = or.split('&');
+            if (!andSplit || andSplit.length === 1) {
+                return simpleSearchTransactions(
+                    transactions,
+                    accountMetadata,
+                    or.replace('&', ''),
+                ).flatMap(t => t.txid);
+            }
 
-    // Final sorting transactions (remove duplicates and non matching AND searches)
-    const transactionCount: { [txid: string]: number } = {};
-    return allTransactions.filter(t => {
-        if (!transactionCount[t.txid]) {
-            transactionCount[t.txid] = 0;
-        }
+            const andTxs = andSplit.flatMap(and =>
+                simpleSearchTransactions(transactions, accountMetadata, and).map(t => t.txid),
+            );
 
-        transactionCount[t.txid]++;
+            const transactionCount: { [txid: string]: number } = {};
+            return andTxs.filter(txid => {
+                if (!transactionCount[txid]) {
+                    transactionCount[txid] = 0;
+                }
 
-        return transactionCount[t.txid] === andSearches.length;
-    });
+                transactionCount[txid]++;
+
+                return transactionCount[txid] === andSplit.length;
+            });
+        }),
+    ]);
+
+    return transactions.filter(t => filteredTxIDs.has(t.txid));
 };
