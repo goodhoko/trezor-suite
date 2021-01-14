@@ -13,6 +13,7 @@ import {
     calculateMax,
     calculateEthFee,
     serializeEthereumTx,
+    getSerializedAmount,
     prepareEthereumTransaction,
 } from '@wallet-utils/sendFormUtils';
 import { isPending } from '@wallet-utils/transactionUtils';
@@ -101,35 +102,35 @@ const calculate = (
 };
 
 export const composeTransaction = (composeTransactionData: ComposeTransactionData) => async () => {
-    const { account, network, feeInfo, ethereumDataHex } = composeTransactionData;
+    const { account, network, feeInfo, address, amount, ethereumDataHex } = composeTransactionData;
     const composeOutputs = getExternalComposeOutput(composeTransactionData);
     if (!composeOutputs) return; // no valid Output
 
     const { output, tokenInfo, decimals } = composeOutputs;
     const { availableBalance } = account;
-    // additional calculation for gasLimit based on data size
     let customFeeLimit: string | undefined;
-    if (typeof ethereumDataHex === 'string' && ethereumDataHex.length > 0) {
-        const response = await TrezorConnect.blockchainEstimateFee({
-            coin: account.symbol,
-            request: {
-                blocks: [2],
-                specific: {
-                    from: account.descriptor,
-                    to: account.descriptor,
-                    data: ethereumDataHex,
-                },
-            },
-        });
-
-        if (response.success) {
-            customFeeLimit = response.payload.levels[0].feeLimit;
-        }
-    }
-
     // set gasLimit based on ERC20 transfer
     if (tokenInfo) {
         customFeeLimit = ERC20_GAS_LIMIT;
+    }
+
+    // gasLimit calculation based on address, amount and data size
+    const estimatedFee = await TrezorConnect.blockchainEstimateFee({
+        coin: account.symbol,
+        request: {
+            blocks: [2],
+            specific: {
+                from: account.descriptor,
+                to: address || account.descriptor,
+                data: ethereumDataHex,
+                // @ts-ignore: not implemented in trezor-connect types but it works :)
+                value: getSerializedAmount(amount),
+            },
+        },
+    });
+
+    if (estimatedFee.success) {
+        customFeeLimit = estimatedFee.payload.levels[0].feeLimit;
     }
 
     const predefinedLevels = feeInfo.levels.filter(l => l.label !== 'custom');

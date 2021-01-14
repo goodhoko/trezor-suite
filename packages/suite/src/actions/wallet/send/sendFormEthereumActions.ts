@@ -7,6 +7,7 @@ import {
     calculateMax,
     calculateEthFee,
     serializeEthereumTx,
+    getSerializedAmount,
     prepareEthereumTransaction,
     getExternalComposeOutput,
 } from '@wallet-utils/sendFormUtils';
@@ -109,31 +110,31 @@ export const composeTransaction = (
 
     const { output, tokenInfo, decimals } = composeOutputs;
     const { availableBalance } = account;
-    const { address } = formValues.outputs[0];
+    const { address, amount } = formValues.outputs[0];
 
-    // additional calculation for gasLimit based on data size
     let customFeeLimit: string | undefined;
-    if (typeof formValues.ethereumDataHex === 'string' && formValues.ethereumDataHex.length > 0) {
-        const response = await TrezorConnect.blockchainEstimateFee({
-            coin: account.symbol,
-            request: {
-                blocks: [2],
-                specific: {
-                    from: account.descriptor,
-                    to: address || account.descriptor,
-                    data: formValues.ethereumDataHex,
-                },
-            },
-        });
-
-        if (response.success) {
-            customFeeLimit = response.payload.levels[0].feeLimit;
-        }
-    }
-
     // set gasLimit based on ERC20 transfer
     if (tokenInfo) {
         customFeeLimit = ERC20_GAS_LIMIT;
+    }
+
+    // gasLimit calculation based on address, amount and data size
+    const estimatedFee = await TrezorConnect.blockchainEstimateFee({
+        coin: account.symbol,
+        request: {
+            blocks: [2],
+            specific: {
+                from: account.descriptor,
+                to: address || account.descriptor,
+                data: formValues.ethereumDataHex,
+                // @ts-ignore: not implemented in trezor-connect types but it works :)
+                value: getSerializedAmount(amount),
+            },
+        },
+    });
+
+    if (estimatedFee.success) {
+        customFeeLimit = estimatedFee.payload.levels[0].feeLimit;
     }
 
     const predefinedLevels = feeInfo.levels.filter(l => l.label !== 'custom');

@@ -75,10 +75,12 @@ export const calculateEthFee = (gasPrice?: string, gasLimit?: string): string =>
     }
 };
 
+export const getSerializedAmount = (amount: string) => toHex(toWei(amount, 'ether'));
+
 export const prepareEthereumTransaction = (txInfo: EthTransactionData) => {
     const result: EthereumTransaction = {
         to: txInfo.to,
-        value: toHex(toWei(txInfo.amount, 'ether')),
+        value: getSerializedAmount(txInfo.amount),
         chainId: txInfo.chainId,
         nonce: toHex(txInfo.nonce),
         gasLimit: toHex(txInfo.gasLimit),
