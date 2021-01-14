@@ -11,6 +11,7 @@ import { useActions, useAnalytics, useSelector } from '@suite-hooks';
 import ActionItem from './components/ActionItem';
 import TooltipContentTor from './components/TooltipContentTor';
 import { isDesktop } from '@suite-utils/env';
+import NotificationsDropdown from '../NotificationsDropdown';
 
 const Wrapper = styled.div`
     display: flex;
@@ -136,6 +137,12 @@ const NavigationActions = (props: Props) => {
                 );
             })}
             <ActionsContainer desktop={isDesktop()} mobileLayout={props.isMobileLayout}>
+                <NotificationsDropdown />
+                {/* <ActionItem
+                    label={<Translation id="TR_NOTIFICATIONS" />}
+                    icon="NOTIFICATION"
+                    isMobileLayout={props.isMobileLayout}
+                /> */}
                 <ActionItem
                     onClick={() => {
                         analytics.report({
