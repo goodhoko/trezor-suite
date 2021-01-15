@@ -1,22 +1,18 @@
-import React, { useRef } from 'react';
-import { Dropdown, Icon, useTheme, DropdownRef, variables } from '@trezor/components';
 import { Translation } from '@suite-components';
+import { Dropdown, DropdownRef } from '@trezor/components';
+import React, { useRef } from 'react';
 import styled from 'styled-components';
-import NotificationsCard from './components/NotificationsCard';
+import Notifications from '../../../../../Notifications';
+import ActionItem from '../ActionItem';
 
 const Wrapper = styled.div`
     display: flex;
     z-index: 10;
-    background-color: #ccccdd;
-`;
-
-const IconWrapper = styled.div`
-    margin: 16px;
+    background-color: #a2cbf2;
 `;
 
 const NotificationsDropdown = () => {
     const dropdownRef = useRef<DropdownRef>();
-    const theme = useTheme();
     return (
         <Wrapper>
             <Dropdown
@@ -29,11 +25,9 @@ const NotificationsDropdown = () => {
 
                         options: [
                             {
-                                key: 'feedback',
+                                key: 'notifications',
                                 label: (
-                                    <NotificationsCard
-                                        onCancel={() => dropdownRef.current!.close()}
-                                    />
+                                    <Notifications onCancel={() => dropdownRef.current!.close()} />
                                 ),
                                 noPadding: true,
                                 noHover: true, // no hover effect
@@ -43,14 +37,7 @@ const NotificationsDropdown = () => {
                     },
                 ]}
             >
-                <IconWrapper>
-                    <Icon
-                        icon="NOTIFICATION"
-                        size={24}
-                        color={theme.TYPE_DARK_GREY}
-                        useCursorPointer
-                    />
-                </IconWrapper>
+                <ActionItem label={<Translation id="TR_NOTIFICATIONS" />} icon="NOTIFICATION" />
             </Dropdown>
         </Wrapper>
     );

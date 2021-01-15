@@ -1,10 +1,9 @@
+import { useSelector } from '@suite-hooks';
+import { AppState } from '@suite-types';
 import { Icon, useTheme, variables } from '@trezor/components';
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useSelector } from '@suite-hooks';
-import { AppState } from '@suite-types';
-import { NotificationEntry } from '@suite-reducers/notificationReducer';
-import NotificationGroup from '../NotificationGroup';
+import NotificationGroup from './components/NotificationGroup';
 
 const Wrapper = styled.div`
     width: 450px;
@@ -55,7 +54,7 @@ const getCategorizedNotifications = (notifications: AppState['notifications']) =
 interface Props {
     onCancel: () => any;
 }
-const NotificationsCard = (props: Props) => {
+const Notifications = (props: Props) => {
     const notifications = useSelector(state => state.notifications);
     const [selectedTab, setSelectedTab] = useState<'notifications' | 'all-activity'>(
         'notifications',
@@ -106,4 +105,4 @@ const NotificationsCard = (props: Props) => {
     );
 };
 
-export default NotificationsCard;
+export default Notifications;

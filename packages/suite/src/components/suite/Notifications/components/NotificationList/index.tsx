@@ -1,12 +1,11 @@
-import { Image, LayoutContext, Translation } from '@suite-components';
+import { Translation } from '@suite-components';
 import hocNotification, { ViewProps } from '@suite-components/hocNotification';
-import { useSelector } from '@suite-hooks';
-import { Button, H2, P, Icon, useTheme } from '@trezor/components';
+import { AppState } from '@suite-types';
+import { getNotificationIcon } from '@suite-utils/notification';
+import { Button, H2, Icon, P } from '@trezor/components';
 import React from 'react';
 import { FormattedDate } from 'react-intl';
 import styled from 'styled-components';
-import { getNotificationIcon } from '@suite-utils/notification';
-import { AppState } from '@suite-types';
 
 const Wrapper = styled.div`
     display: flex;
@@ -14,12 +13,6 @@ const Wrapper = styled.div`
     flex-direction: column;
     max-width: 100%;
 `;
-
-// this gives "Error: Cannot create styled-component for component" error
-// const StyledCard = styled(Card)`
-//     display: flex;
-//     flex-direction: column;
-// `;
 
 const DateP = styled(P)`
     display: flex;
@@ -67,8 +60,6 @@ const NotificationView = (props: ViewProps) => {
                     weight={seen ? 'normal' : 'bold'}
                     style={{ opacity: seen ? 0.7 : 1 }}
                 >
-                    {/* <Translation id={props.message} values={props.message.values} /> */}
-
                     {typeof props.message === 'string' ? (
                         <Translation id={props.message} />
                     ) : (
