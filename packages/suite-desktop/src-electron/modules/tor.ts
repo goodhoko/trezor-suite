@@ -1,7 +1,7 @@
 /**
  * Tor feature (toggle, configure)
  */
-import { app, session, ipcMain, BrowserWindow, IpcMainEvent } from 'electron';
+import { app, session, ipcMain, IpcMainEvent } from 'electron';
 
 import TorProcess from '@lib/processes/TorProcess';
 
@@ -11,7 +11,7 @@ const tor = new TorProcess();
 
 const torFlag = app.commandLine.hasSwitch('tor');
 
-const init = async (window: BrowserWindow, store: LocalStore) => {
+const init = async ({ mainWindow, store, logger }: Dependencies) => {
     const torSettings = store.getTorSettings();
 
     const toggleTor = async (start: boolean) => {
@@ -28,7 +28,7 @@ const init = async (window: BrowserWindow, store: LocalStore) => {
         torSettings.running = start;
         store.setTorSettings(torSettings);
 
-        window.webContents.send('tor/status', start);
+        mainWindow.webContents.send('tor/status', start);
         session.defaultSession.setProxy({
             proxyRules: start ? `socks5://${torSettings.address}` : '',
         });
@@ -54,7 +54,7 @@ const init = async (window: BrowserWindow, store: LocalStore) => {
     });
 
     ipcMain.on('tor/get-status', () => {
-        window.webContents.send('tor/status', torSettings.running);
+        mainWindow.webContents.send('tor/status', torSettings.running);
     });
 
     ipcMain.handle('tor/get-address', () => {

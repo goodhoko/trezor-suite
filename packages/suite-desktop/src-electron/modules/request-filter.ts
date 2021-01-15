@@ -1,11 +1,11 @@
 /**
  * Request Filter feature (blocks non-allowed requests and displays a warning)
  */
-import { dialog, session, BrowserWindow } from 'electron';
+import { dialog, session } from 'electron';
 
 import * as config from '../config';
 
-const init = (window: BrowserWindow) => {
+const init = ({ mainWindow, logger }: Dependencies) => {
     const resourceTypeFilter = ['xhr']; // What resource types we want to filter
     const caughtDomainExceptions: string[] = []; // Domains that have already shown an exception
     session.defaultSession.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, cb) => {
@@ -24,7 +24,7 @@ const init = (window: BrowserWindow) => {
 
         if (caughtDomainExceptions.find(d => d === hostname) === undefined) {
             caughtDomainExceptions.push(hostname);
-            dialog.showMessageBox(window, {
+            dialog.showMessageBox(mainWindow, {
                 type: 'warning',
                 message: `Suite blocked a request to ${hostname}.\n\nIf you believe this is an error, please contact our support.`,
                 buttons: ['OK'],

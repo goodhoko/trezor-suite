@@ -7,21 +7,11 @@ import isDev from 'electron-is-dev';
 import { RESOURCES, PROTOCOL } from '@lib/constants';
 import * as store from '@lib/store';
 import { MIN_HEIGHT, MIN_WIDTH } from '@lib/screen';
+import Logger, { LogLevel } from '@lib/logger';
+import { buildInfo, computerInfo } from '@lib/info';
 
 // Modules
-import csp from '@module/csp';
-import autoUpdater from '@module/auto-updater';
-import windowControls from '@module/window-controls';
-import tor from '@module/tor';
-import bridge from '@module/bridge';
-import metadata from '@module/metadata';
-import menu from '@module/menu';
-import shortcuts from '@module/shortcuts';
-import devTools from '@module/dev-tools';
-import httpReceiver from '@module/http-receiver';
-import requestFilter from '@module/request-filter';
-import externalLinks from '@module/external-links';
-import fileProtocol from '@module/file-protocol';
+import modules from '@module/index';
 
 let mainWindow: BrowserWindow;
 const APP_NAME = 'Trezor Suite';
@@ -33,11 +23,26 @@ const src = isDev
           slashes: true,
       });
 
+// Logger
+const log = {
+    level: app.commandLine.getSwitchValue('log-level') || (isDev ? 'debug' : 'error'),
+    writeToConsole: !app.commandLine.hasSwitch('log-no-print'),
+    writeToDisk: app.commandLine.hasSwitch('log-write'),
+    outputFile: app.commandLine.getSwitchValue('log-output'),
+};
+
+const logger = new Logger(log.level as LogLevel, { ...log });
+logger.info('Main', 'Application starting.');
+
 // Globals
 global.quitOnWindowClose = false;
 
 const init = async () => {
+    buildInfo();
+    await computerInfo();
+
     const winBounds = store.getWinBounds();
+    logger.debug('Init', `Create Browswer Window (${winBounds.width}x${winBounds.height})`);
     mainWindow = new BrowserWindow({
         title: APP_NAME,
         width: winBounds.width,
@@ -58,28 +63,16 @@ const init = async () => {
     });
 
     // Load page
+    logger.debug('Init', `Load URL (${src})`);
     mainWindow.loadURL(src);
 
     // Modules
-    menu(mainWindow);
-    shortcuts(mainWindow, src);
-    requestFilter(mainWindow);
-    externalLinks(mainWindow, store);
-    windowControls(mainWindow, store);
-    httpReceiver(mainWindow, src);
-    metadata();
-    await bridge();
-    await tor(mainWindow, store);
-
-    if (isDev) {
-        // Dev only modules
-        devTools(mainWindow);
-    } else {
-        // Prod only modules
-        csp(mainWindow);
-        fileProtocol(mainWindow, src);
-        autoUpdater(mainWindow, store);
-    }
+    await modules({
+        logger,
+        mainWindow,
+        src,
+        store,
+    });
 };
 
 app.name = APP_NAME; // overrides @trezor/suite-desktop app name in menu
@@ -88,6 +81,7 @@ app.on('ready', init);
 app.on('before-quit', () => {
     if (!mainWindow) return;
     mainWindow.removeAllListeners();
+    logger.exit();
 });
 
 ipcMain.on('app/restart', () => {

@@ -15,85 +15,85 @@ const notifyWindowActive = (window: BrowserWindow, state: boolean) => {
     window.webContents.send('window/is-active', state);
 };
 
-const init = (window: BrowserWindow, store: LocalStore) => {
+const init = ({ mainWindow, store, logger }: Dependencies) => {
     if (process.platform === 'darwin') {
         // macOS specific window behavior
         // it is common for applications and their context menu to stay active until the user quits explicitly
         // with Cmd + Q or right-click > Quit from the context menu.
 
         // restore window after click on the Dock icon
-        app.on('activate', () => window.show());
+        app.on('activate', () => mainWindow.show());
         // hide window to the Dock
         // this event listener will be removed by app.on('before-quit')
-        window.on('close', event => {
+        mainWindow.on('close', event => {
             if (global.quitOnWindowClose) {
                 app.quit();
                 return;
             }
 
             event.preventDefault();
-            window.hide();
+            mainWindow.hide();
         });
     } else {
         // other platform just kills the app
         app.on('window-all-closed', () => app.quit());
     }
 
-    window.on('page-title-updated', evt => {
+    mainWindow.on('page-title-updated', evt => {
         // prevent updating window title
         evt.preventDefault();
     });
-    window.on('maximize', () => {
-        notifyWindowMaximized(window);
+    mainWindow.on('maximize', () => {
+        notifyWindowMaximized(mainWindow);
     });
-    window.on('unmaximize', () => {
-        notifyWindowMaximized(window);
+    mainWindow.on('unmaximize', () => {
+        notifyWindowMaximized(mainWindow);
     });
-    window.on('enter-full-screen', () => {
-        notifyWindowMaximized(window);
+    mainWindow.on('enter-full-screen', () => {
+        notifyWindowMaximized(mainWindow);
     });
-    window.on('leave-full-screen', () => {
-        notifyWindowMaximized(window);
+    mainWindow.on('leave-full-screen', () => {
+        notifyWindowMaximized(mainWindow);
     });
-    window.on('moved', () => {
-        notifyWindowMaximized(window);
+    mainWindow.on('moved', () => {
+        notifyWindowMaximized(mainWindow);
     });
-    window.on('focus', () => {
-        notifyWindowActive(window, true);
+    mainWindow.on('focus', () => {
+        notifyWindowActive(mainWindow, true);
     });
-    window.on('blur', () => {
-        notifyWindowActive(window, false);
+    mainWindow.on('blur', () => {
+        notifyWindowActive(mainWindow, false);
     });
 
     ipcMain.on('window/close', () => {
         // Keeping the devtools open might prevent the app from closing
-        if (window.webContents.isDevToolsOpened()) {
-            window.webContents.closeDevTools();
+        if (mainWindow.webContents.isDevToolsOpened()) {
+            mainWindow.webContents.closeDevTools();
         }
         // store window bounds on close btn click
-        const winBound = window.getBounds() as WinBounds;
+        const winBound = mainWindow.getBounds() as WinBounds;
         store.setWinBounds(winBound);
-        window.close();
+        mainWindow.close();
     });
     ipcMain.on('window/minimize', () => {
-        window.minimize();
+        mainWindow.minimize();
     });
     ipcMain.on('window/maximize', () => {
         if (process.platform === 'darwin') {
-            window.setFullScreen(true);
+            mainWindow.setFullScreen(true);
         } else {
-            window.maximize();
+            mainWindow.maximize();
         }
     });
     ipcMain.on('window/unmaximize', () => {
         if (process.platform === 'darwin') {
-            window.setFullScreen(false);
+            mainWindow.setFullScreen(false);
         } else {
-            window.unmaximize();
+            mainWindow.unmaximize();
         }
     });
     ipcMain.on('client/ready', () => {
-        notifyWindowMaximized(window);
+        notifyWindowMaximized(mainWindow);
     });
     ipcMain.on('window/focus', () => {
         app.focus({ steal: true });
@@ -101,7 +101,7 @@ const init = (window: BrowserWindow, store: LocalStore) => {
 
     app.on('before-quit', () => {
         // store window bounds on cmd/ctrl+q
-        const winBound = window.getBounds() as WinBounds;
+        const winBound = mainWindow.getBounds() as WinBounds;
         store.setWinBounds(winBound);
     });
 };

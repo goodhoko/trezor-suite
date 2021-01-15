@@ -1,12 +1,12 @@
-import { BrowserWindow, Menu } from 'electron';
+import { Menu } from 'electron';
 
 import { buildMainMenu, inputMenu, selectionMenu } from '@lib/menu';
 
-const init = (window: BrowserWindow) => {
+const init = ({ mainWindow, logger }: Dependencies) => {
     Menu.setApplicationMenu(buildMainMenu());
-    window.setMenuBarVisibility(false);
+    mainWindow.setMenuBarVisibility(false);
 
-    window.webContents.on('context-menu', (_e, props) => {
+    mainWindow.webContents.on('context-menu', (_, props) => {
         if (props.isEditable) {
             // right click on the input/textarea should open a context menu with text editing options (copy, cut, paste,...)
             inputMenu.popup();

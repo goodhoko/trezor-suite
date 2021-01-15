@@ -6,7 +6,7 @@ import { save, read } from '@lib/user-data';
 
 const DATA_DIR = '/metadata';
 
-export const init = () => {
+export const init = ({ logger }: Dependencies) => {
     ipcMain.handle('metadata/write', async (_, message) => {
         const resp = await save(DATA_DIR, message.file, message.content);
         return resp;

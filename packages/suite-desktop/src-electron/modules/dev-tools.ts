@@ -1,11 +1,10 @@
 /**
  * Enable development tools
  */
-import { BrowserWindow } from 'electron';
-
-const init = (window: BrowserWindow) => {
-    window.webContents.once('dom-ready', () => {
-        window.webContents.openDevTools();
+const init = ({ mainWindow, logger }: Dependencies) => {
+    mainWindow.webContents.once('dom-ready', () => {
+        logger.debug('DevTools', 'Opening devTools');
+        mainWindow.webContents.openDevTools();
     });
 };
 

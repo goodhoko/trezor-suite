@@ -1,9 +1,14 @@
 const path = require('path');
+const child_process = require('child_process');
 const { build } = require('esbuild');
 const pkg = require('../package.json');
 
 const electronSource = path.join(__dirname, '..', 'src-electron');
 const isDev = process.env.NODE_ENV !== 'production';
+
+const gitRevision = child_process.execSync('git rev-parse HEAD').toString().trim();
+
+console.log(gitRevision);
 
 console.log('[Electron Build] Starting...');
 const hrstart = process.hrtime();
@@ -20,6 +25,9 @@ build({
     sourcemap: isDev,
     minify: !isDev,
     outdir: path.join(__dirname, '..', 'dist'),
+    define: {
+        'process.env.COMMITHASH': JSON.stringify(gitRevision),
+    },
 })
     .then(() => {
         const hrend = process.hrtime(hrstart);
